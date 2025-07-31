@@ -1,1 +1,5 @@
 .tar.gz
+.tar.xz
+.tar.bz2
+_jhbuild
+*.o
