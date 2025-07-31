@@ -1,0 +1,30 @@
+# how to use this file?
+#
+# mkdir -p $HOME/spice
+# git clone git://anongit.freedesktop.org/git/xorg/util/modular/ $HOME/xorg/util/modular
+# git clone git://people.freedesktop.org/~teuf/spice-jhbuild ~/spice/spice-jhbuild
+# jhbuild -f $HOME/spice/spice-jhbuild/jhbuildrc
+#
+# Source tree will be in $HOME/spice/
+# Binaries will be in $HOME/spice-usr
+#
+
+moduleset = os.path.join(os.environ['HOME'], 'spice', 'spice-jhbuild', 'modulesets', 'spice.xml')
+
+autogenargs = ''
+
+modules = [ 'spice-gtk', 'qemu' ]
+
+modules['m4'].post_checkout = [
+    'sed -i '' 's/__attribute_noreturn__ void (*obstack_alloc_failed_handler) (void)/void (*obstack_alloc_failed_handler) (void)/g' lib/obstack.c',
+    'sed -i '' 's/extern __attribute_noreturn__ void (*obstack_alloc_failed_handler) (void);/extern void (*obstack_alloc_failed_handler) (void);/g' lib/obstack.h'
+]
+
+os.environ['CFLAGS'] = '-Wno-int-conversion'
+
+# custom CFLAGS / environment pieces for the build
+# os.environ['CFLAGS'] = '-Wall -g -O0'
+
+# Additional flags for make can be specified here
+# Set makeargs to 'V=1' for verbose build output.
+# makeargs = '-j8'

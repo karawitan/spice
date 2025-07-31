@@ -1,0 +1,44 @@
+This is a jhbuild moduleset to build spice (and optionally libvirt) with
+smartcard support.
+To use it, you first have to download and install jhbuild from
+https://gitlab.gnome.org/GNOME/jhbuild
+It should be a simple matter of:
+git clone https://gitlab.gnome.org/GNOME/jhbuild.git
+cd jhbuild
+./autogen.sh --prefix=....
+make install
+
+More about jhbuild in the official guide:
+https://developer.gnome.org/jhbuild/stable/introduction.html.en
+
+Then you can clone this jhbuild moduleset into ~/spice:
+mkdir -p ~/spice
+git clone git://anongit.freedesktop.org/spice/spice-jhbuild ~/spice/spice-jhbuild
+jhbuild -f ~/spice/spice-jhbuild/jhbuildrc
+
+and it will build qemu with spice support and smartcard support and
+spice-gtk as the spice client.
+
+JHBuild has an option which try to install the system dependencies of
+the modules you want to build:
+jhbuild -f ~/spice/spice-jhbuild/jhbuildrc sysdeps --install
+
+The source are downloaded into ~/spice, and the binaries installed to
+~/spice-run. If you want to tweak these paths, you can edit the
+~/spice/spice-jhbuild/jhbuildrc file, it should be self-explanatory.
+
+In case you want to change this directories, check the jhbuildrc.
+
+It can be run with something like:
+jhbuild -f ~/spice/spice-jhbuild/jhbuildrc run \
+qemu-system-x86_64 -vga qxl -spice port=5924,disable-ticketing \
+-enable-kvm -m 512 -nographic -usbdevice tablet -cdrom ~/isos/livecd.iso
+
+and
+
+jhbuild -f ~/spice/spice-jhbuild/jhbuildrc run spicy
+(spice is running on localhost:5924 with the command line above)
+
+If you run
+jhbuild -f ~/spice/spice-jhbuild/jhbuildrc virt-manager
+libvirt and virt-manager will be built instead.

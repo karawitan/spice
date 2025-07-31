@@ -1,0 +1,262 @@
+<?xml version="1.0" standalone="no"?><!--*- mode: nxml -*-->
+<!DOCTYPE moduleset SYSTEM "moduleset.dtd">
+<?xml-stylesheet type="text/xsl" href="moduleset.xsl"?>
+<moduleset>
+  
+
+  <repository type="git" name="git.freedesktop.org"
+      href="git://anongit.freedesktop.org/"/>
+
+  <repository type="git" name="spice.git"
+      href="git://anongit.freedesktop.org/git/spice"/>
+
+  <repository type="tarball" name="spice"
+      href="http://spice-space.org/download/"/>
+
+  <repository type="tarball" name="virt-tools"
+      href="http://virt-manager.org/download/sources/"/>
+
+  <repository type="git" name="qemu"
+      href="git://git.qemu.org"/>
+
+  <repository type="git" name="libvirt.org"
+      href="git://libvirt.org/"/>
+
+  <repository type="git" name="git.fedorahosted.org"
+      href="git://git.fedorahosted.org/git/"/>
+
+  <repository type="tarball" name="sourceforge"
+      href="http://downloads.sourceforge.net/project/"/>
+
+  <repository type="tarball" name="xiph"
+      href="http://downloads.us.xiph.org/releases/"/>
+
+  <repository type="git" name="git.gnome.org"
+      href="git://git.gnome.org/"/>
+
+  <repository type="tarball" name="ftp.gnome.org" 
+      href="ftp://ftp.gnome.org/pub/gnome/sources/"/>
+
+  <autotools id="celt">
+    <branch module="celt/celt-0.5.1.3.tar.gz" repo="xiph" version="0.5.1.3"
+            hash="sha256:fc2e5b68382eb436a38c3104684a6c494df9bde133c139fbba3ddb5d7eaa6a2e"
+            md5sum="67e7b5e45db57a6f1f0a6962f5ecb190" size="440772">
+      <patch file="http://cgit.freedesktop.org/spice/spice-jhbuild/plain/patches/celt-0.5.1.3-dont-recurse-into-tests.patch?h=osx" strip="1"/>
+    </branch>
+  </autotools>
+
+  <autotools id="spice-server" autogenargs="--enable-werror --enable-smartcard --with-sasl --disable-client" >
+    <branch repo="spice.git" module="spice"/>
+    <dependencies>
+      <dep package="spice-protocol"/>
+      <dep package="celt"/>
+      <dep package="libcacard"/>
+      <dep package="pyparsing"/>
+    </dependencies>
+  </autotools>
+
+  <autotools id="spice-protocol">
+    <branch repo="spice"
+            module="releases/spice-protocol-0.12.6.tar.bz2"
+            version="0.12.6"
+            hash="sha256:9d4745602eb2ab1d1c1ab98b4babf587574870993b4faefe354ac57bb5e8259b"
+            size="70176" />
+    <dependencies>
+    </dependencies>
+  </autotools>
+
+  <!-- qemu isn't a real autotools user, but it provides a configure script
+       which is really similar to the one in autotools build systems.
+       However clean git checkouts already contain a Makefile, so we can't
+       rely on this file to know whether autogen.sh needs to be run or not,
+       so we use config.log instead (which isn't present in a clean git
+       checkout). The configure script requires an "=" when using 'prefix',
+       and doesn't accept libdir nor other unknow arguments so we force
+       a specific template to be used -->
+  <autotools id="qemu" makefile="config.log" autogen-template="%(srcdir)s/configure --prefix=%(prefix)s --enable-spice --target-list=x86_64-softmmu --enable-smartcard-nss --enable-smartcard" >
+    <branch repo="qemu" module="qemu"/>
+    <dependencies>
+      <dep package="libcacard"/>
+      <dep package="spice-server"/>
+      <dep package="vd-agent"/>
+    </dependencies>
+  </autotools>
+
+  <autotools id="slirp">
+    <branch repo="spice.git" module="slirp"/>
+    <dependencies>
+    </dependencies>
+  </autotools>
+
+  <autotools id="usbredir" makeinstallargs="LIBDIR=%(libdir) PREFIX=%(prefix) install">
+    <branch repo="git.freedesktop.org" module="~jwrdegoede/usbredir"/>
+    <dep package="libusb"/>
+  </autotools>
+
+  <autotools id="libusb">
+    <branch repo="git.freedesktop.org" module="~jwrdegoede/libusb"/>
+  </autotools>
+
+  <autotools id="libcacard" makefile="config.log" autogen-template="%(srcdir)s/configure --prefix=%(prefix)s --target-list=x86_64-softmmu" makeargs="libcacard.la" makeinstallargs="install-libcacard">
+    <branch repo="qemu" module="qemu"/>
+  </autotools>
+
+  <distutils id="pyparsing">
+    <branch repo="sourceforge"
+        module="pyparsing/pyparsing/pyparsing-1.5.5/pyparsing-1.5.5.tar.gz"
+        hash="sha1:68f18a8f98c9d0e613e08ab45c2b8263daa4a53b"
+        version="1.5.5" size="1412611"/>
+  </distutils>
+
+  <autotools id="spice-gtk" autogenargs="--disable-usbredir --without-python --with-audio=gstreamer --with-gtk=2.0 --disable-smartcard --disable-vala --enable-controller --with-coroutine=gthread --disable-werror">
+    <branch repo="spice"
+            module="gtk/spice-gtk-0.20.tar.bz2"
+            version="0.20"
+            hash="sha256:b1355823b0ceb2e118c1f9a9a602ccab78e1e2edf2d93f71fa42d3bc85ca75df"
+            size="1210694">
+      <!--patch file="http://people.freedesktop.org/~teuf/spice-gtk-osx/0001-Update-spice-glib-sym-file-for-new-symbol.patch" strip="1"/> -->
+    </branch>
+    <dependencies>
+      <dep package="celt"/>
+      <dep package="pyparsing"/>
+      <dep package="spice-protocol"/>
+      <dep package="gst-plugins-good"/>
+      <dep package="gtk+"/>
+    </dependencies>
+  </autotools>
+
+  <autotools id="spice-gtk3" autogenargs="--disable-usbredir --without-python --with-audio=gstreamer --with-gtk=3.0 --disable-smartcard --disable-vala --enable-controller --with-coroutine=gthread">
+    <branch repo="spice"
+            module="gtk/spice-gtk-0.20.tar.bz2"
+            version="0.20"
+            hash="sha256:b1355823b0ceb2e118c1f9a9a602ccab78e1e2edf2d93f71fa42d3bc85ca75df"
+            size="1210694">
+      <!--patch file="http://people.freedesktop.org/~teuf/spice-gtk-osx/0001-Update-spice-glib-sym-file-for-new-symbol.patch" strip="1"/> -->
+    </branch>
+    <dependencies>
+      <dep package="celt"/>
+      <dep package="pyparsing"/>
+      <dep package="spice-protocol"/>
+      <dep package="gst-plugins-good"/>
+      <dep package="gtk+-3.0"/>
+    </dependencies>
+  </autotools>
+
+  <autotools id="vd-agent">
+    <branch repo="spice.git" module="linux/vd_agent"/>
+    <dependencies>
+      <dep package="spice-protocol"/>
+    </dependencies>
+  </autotools>
+
+  <autotools id="qxl">
+    <branch repo="spice.git" module="xorg/driver/xf86-video-qxl"/>
+    <dependencies>
+      <dep package="spice-protocol"/>
+    </dependencies>
+  </autotools>
+
+  <autotools id="xspice">
+    <branch repo="git.freedesktop.org" module="~alon/xspice"/>
+    <dependencies>
+      <dep package="spice-protocol"/>
+      <dep package="spice-server"/>
+    </dependencies>
+  </autotools>
+
+  <autotools id="win32-vd-agent">
+    <branch repo="spice.git" module="win32/vd_agent"/>
+    <dependencies>
+    </dependencies>
+  </autotools>
+
+  <autotools id="win32-qxl">
+    <branch repo="spice.git" module="win32/qxl"/>
+    <dependencies>
+    </dependencies>
+  </autotools>
+
+  <autotools id="libvirt">
+    <branch repo="libvirt.org" module="libvirt.git"/>
+    <dependencies>
+    </dependencies>
+  </autotools>
+
+  <autotools id="libvirt-glib" autogenargs="--enable-vala">
+    <branch repo="libvirt.org" module="libvirt-glib.git"/>
+    <dependencies>
+      <dep package="libvirt"/>
+    </dependencies>
+  </autotools>
+
+  <autotools id="boxes">
+    <branch repo="git.gnome.org" module="gnome-boxes"/>
+    <dependencies>
+      <dep package="gtk-vnc"/>
+      <dep package="libosinfo"/>
+      <dep package="libvirt-glib"/>
+      <dep package="spice-gtk"/>
+    </dependencies>
+  </autotools>
+
+  <autotools id="virt-manager" makeinstallargs="-C build install" makeargs="-C build" autogenargs=" --with-default-graphics=spice">
+    <branch repo="git.fedorahosted.org" module="virt-manager.git"/>
+    <dependencies>
+      <dep package="libvirt"/>
+      <dep package="virtinst"/>
+    </dependencies>
+  </autotools>
+
+  <distutils id="virtinst">
+    <branch repo="git.fedorahosted.org" module="python-virtinst.git"/>
+    <dependencies>
+      <dep package="virt-viewer"/>
+    </dependencies>
+  </distutils>
+
+  <autotools id="virt-viewer" autogenargs="--with-gtk=2.0">
+    <branch repo="virt-tools"
+            module="virt-viewer/virt-viewer-0.5.7.tar.gz"
+            version="0.5.7"
+            hash="sha256:4af5e660b3d15bcd3727851af1ddc2f08805c50ad4fc30714e21b20113fe9a83"
+            size="676213" />
+    <dependencies>
+      <dep package="spice-gtk"/>
+    </dependencies>
+  </autotools>
+
+  <autotools id="virt-viewer-gtk3" autogenargs="--with-gtk=3.0">
+    <branch repo="virt-tools"
+            module="virt-viewer/virt-viewer-0.5.7.tar.gz"
+            version="0.5.7"
+            hash="sha256:4af5e660b3d15bcd3727851af1ddc2f08805c50ad4fc30714e21b20113fe9a83"
+            size="676213" />
+    <dependencies>
+      <dep package="spice-gtk3"/>
+    </dependencies>
+  </autotools>
+
+  <autotools id="libosinfo">
+    <branch repo="git.fedorahosted.org" module="libosinfo.git"/>
+  </autotools>
+
+  <autotools id="gtk-vnc" autogenargs="--with-gtk=2.0">
+    <branch repo="git.gnome.org" module="gtk-vnc.git"/>
+  </autotools>
+
+  <autotools id="vinagre" autogenargs="--enable-spice">
+    <branch repo="git.gnome.org" module="vinagre.git"/>
+    <dependencies>
+      <dep package="spice-gtk"/>
+    </dependencies>
+  </autotools>
+
+  <autotools id="gettext">
+  <branch repo="gnu" module="gettext-0.22.5.tar.gz" version="0.22.5" />
+  <autogenargs>--disable-java --disable-csharp --without-emacs</autogenargs>
+</autotools>
+
+  
+
+
+</moduleset>
