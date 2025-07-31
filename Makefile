@@ -34,7 +34,7 @@ doc:
 
 deps: cogl
 	defaults write org.macosforge.xquartz.X11 enable_iglx -bool true
-	brew install mesa mesa-glu
+	brew install mesa mesa-glu gettext
 	brew install libx11 libxext libxfixes libxdamage libxcomposite libxrandr
 	brew install pkg-config iso-codes libgdata webkitgtk libgee gtk-doc glib
 	cd cogl ; ./autogen.sh
