@@ -1,4 +1,7 @@
 .PHONY: all m4 autoconf libtool clean
+.PHONY: help all build
+
+CURDIR := $(shell pwd)
 
 M4_DIR = m4-1.4.20
 AUTOCONF_DIR = autoconf-2.69
@@ -6,8 +9,41 @@ LIBTOOL_DIR = libtool-2.4.6
 M4_INSTALL_DIR = $(CURDIR)/m4-install
 AUTOCONF_INSTALL_DIR = $(CURDIR)/autoconf-install
 LIBTOOL_INSTALL_DIR = $(CURDIR)/libtool-install
+JHBUILD=jhbuild-install/bin/jhbuild
 
-all: libtool
+
+build:
+	@echo "Building the project..."
+
+	. venv/bin/activate ; \
+	export PYENV_VERSION=$(pyenv version-name) ; \
+	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/jhbuild-install/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
+	$(JHBUILD) sysdeps --install
+
+	. venv/bin/activate ; \
+	export PYENV_VERSION=$(pyenv version-name) ; \
+	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/jhbuild-install/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
+	$(JHBUILD) bootstrap
+
+	. venv/bin/activate ; \
+	export PYENV_VERSION=$(pyenv version-name) ; \
+	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/jhbuild-install/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
+	$(JHBUILD) build
+
+
+venv:
+	python3 -m venv $@
+p:
+	. venv/bin/activate ; pip install --upgrade pplx-cli pip
+
+doc:
+
+deps: cogl
+	cd cogl ; ./autogen.sh
+	#brew install pkg-config iso-codes libgdata webkitgtk libgee
+
+cogl:
+	git clone https://gitlab.gnome.org/Archive/cogl.git --single-branch
 
 m4:
 	@echo "Configuring m4..."
@@ -47,3 +83,8 @@ clean:
 	@echo "Cleaning libtool..."
 	cd $(LIBTOOL_DIR) && make clean || true
 	rm -rf $(LIBTOOL_INSTALL_DIR)
+
+help: ## Show this help message
+	@grep -hP '^[\w \-]+:.*##.*$$' $(MAKEFILE_LIST) | sort | \
+	awk 'BEGIN {FS = ":.*## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
+

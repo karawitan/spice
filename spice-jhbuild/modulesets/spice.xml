@@ -2,7 +2,12 @@
 <!DOCTYPE moduleset SYSTEM "moduleset.dtd">
 <?xml-stylesheet type="text/xsl" href="moduleset.xsl"?>
 <moduleset>
-  
+
+
+<include href="gtk-osx-bootstrap.modules" />
+
+<repository type="git" name="git.freedesktop.org"
+    href="git://anongit.freedesktop.org/"/>
 
   <repository type="git" name="git.freedesktop.org"
       href="git://anongit.freedesktop.org/"/>
@@ -260,3 +265,4 @@
 
 
 </moduleset>
+/Users/kalou/spice/spice-jhbuild/gtk-osx-bootstrap.txt

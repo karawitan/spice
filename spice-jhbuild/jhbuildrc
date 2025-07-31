@@ -27,4 +27,4 @@ os.environ['CFLAGS'] = '-Wno-int-conversion'
 
 # Additional flags for make can be specified here
 # Set makeargs to 'V=1' for verbose build output.
-# makeargs = '-j8'
+makeargs = '-j8'
