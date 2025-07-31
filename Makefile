@@ -18,11 +18,6 @@ build:
 	. venv/bin/activate ; \
 	export PYENV_VERSION=$(pyenv version-name) ; \
 	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/jhbuild-install/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
-	$(JHBUILD) sysdeps --install
-
-	. venv/bin/activate ; \
-	export PYENV_VERSION=$(pyenv version-name) ; \
-	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/jhbuild-install/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
 	$(JHBUILD) bootstrap
 
 	. venv/bin/activate ; \
@@ -30,20 +25,32 @@ build:
 	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/jhbuild-install/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
 	$(JHBUILD) build
 
-
 venv:
 	python3 -m venv $@
-p:
-	. venv/bin/activate ; pip install --upgrade pplx-cli pip
+	. venv/bin/activate ; pip3 install --upgrade pip
+	. venv/bin/activate ; pip3 install pplx-cli pip setuptools
 
 doc:
 
 deps: cogl
+	defaults write org.macosforge.xquartz.X11 enable_iglx -bool true
+	brew install mesa mesa-glu
+	brew install libx11 libxext libxfixes libxdamage libxcomposite libxrandr
+	brew install pkg-config iso-codes libgdata webkitgtk libgee gtk-doc glib
 	cd cogl ; ./autogen.sh
-	#brew install pkg-config iso-codes libgdata webkitgtk libgee
 
 cogl:
 	git clone https://gitlab.gnome.org/Archive/cogl.git --single-branch
+	cd cogl ; ./autogen.sh
+	cd cogl ; make clean ; \
+	./configure \
+	  --disable-wayland-egl-platform \
+	  --disable-wayland-egl-server \
+	  --enable-gl \
+	  --enable-cogl-gst \
+	  CPPFLAGS="-I/opt/X11/include" \
+	  LDFLAGS="-L/opt/X11/lib"
+
 
 m4:
 	@echo "Configuring m4..."
