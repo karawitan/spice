@@ -2,12 +2,12 @@
 # Settings from the configure script
 #
 
-abs_srcdir=/Users/kalou/spice/pkg-config-0.29.2/check
+abs_srcdir=$(HOME)/spice/pkg-config-0.29.2/check
 top_srcdir=..
-abs_top_srcdir=/Users/kalou/spice/pkg-config-0.29.2
-abs_builddir=/Users/kalou/spice/pkg-config-0.29.2/check
+abs_top_srcdir=$(HOME)/spice/pkg-config-0.29.2
+abs_builddir=$(HOME)/spice/pkg-config-0.29.2/check
 top_builddir=..
-abs_top_builddir=/Users/kalou/spice/pkg-config-0.29.2
+abs_top_builddir=$(HOME)/spice/pkg-config-0.29.2
 prefix=/usr/local
 exec_prefix=${prefix}
 includedir=${prefix}/include

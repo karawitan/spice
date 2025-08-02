@@ -1,4 +1,4 @@
-PREFIX = /Users/kalou/spice
+PREFIX = $(HOME)/spice
 # Makefile for PO directory in any package using GNU gettext.
 # Copyright (C) 1995-1997, 2000-2007, 2009-2010 by Ulrich Drepper <drepper@gnu.ai.mit.edu>
 #
@@ -24,7 +24,7 @@ srcdir = .
 top_srcdir = ..
 
 
-prefix = /Users/kalou/spice/m4-install
+prefix = $(HOME)/spice/m4-install
 exec_prefix = ${prefix}
 datarootdir = ${prefix}/share
 datadir = ${datarootdir}
@@ -37,12 +37,12 @@ INSTALL_DATA = ${INSTALL} -m 644
 # We use $(mkdir_p).
 # In automake <= 1.9.x, $(mkdir_p) is defined either as "mkdir -p --" or as
 # "$(mkinstalldirs)" or as "$(install_sh) -d". For these automake versions,
-# ${SHELL} /Users/kalou/spice/m4-1.4.20/build-aux/install-sh does not start with $(SHELL), so we add it.
+# ${SHELL} $(HOME)/spice/m4-1.4.20/build-aux/install-sh does not start with $(SHELL), so we add it.
 # In automake >= 1.10, $(MKDIR_P) is derived from ${MKDIR_P}, which is defined
 # either as "/path/to/mkdir -p" or ".../install-sh -c -d". For these automake
 # versions, $(mkinstalldirs) and $(install_sh) are unused.
-mkinstalldirs = $(SHELL) ${SHELL} /Users/kalou/spice/m4-1.4.20/build-aux/install-sh -d
-install_sh = $(SHELL) ${SHELL} /Users/kalou/spice/m4-1.4.20/build-aux/install-sh
+mkinstalldirs = $(SHELL) ${SHELL} $(HOME)/spice/m4-1.4.20/build-aux/install-sh -d
+install_sh = $(SHELL) ${SHELL} $(HOME)/spice/m4-1.4.20/build-aux/install-sh
 MKDIR_P = mkdir -p
 mkdir_p = $(MKDIR_P)
 

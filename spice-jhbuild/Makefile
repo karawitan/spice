@@ -1,4 +1,4 @@
-PREFIX = /Users/kalou/spice
+PREFIX = $(HOME)/spice
 
 build:
-	../jhbuild-install/bin/jhbuild -f /Users/kalou/spice/spice-jhbuild/jhbuildrc
+	../jhbuild-install/bin/jhbuild -f $(HOME)/spice/spice-jhbuild/jhbuildrc
