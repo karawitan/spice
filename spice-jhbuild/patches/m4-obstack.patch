@@ -1,0 +1,24 @@
+diff --git a/lib/obstack.c b/lib/obstack.c
+--- a/lib/obstack.c
++++ b/lib/obstack.c
+@@ -142,7 +142,7 @@ extern int obstack_chunk_size;
+ extern void *obstack_base;
+ extern void *obstack_next_free;
+ extern void *obstack_alignment_mask;
++extern void (*obstack_alloc_failed_handler) (void);
+-extern __attribute_noreturn__ void (*obstack_alloc_failed_handler) (void);
+ extern void (*obstack_chunkfun) (void *, size_t);
+ extern void (*obstack_freefun) (void *, void *);
+ extern void *obstack_alloc;
+diff --git a/lib/obstack.h b/lib/obstack.h
+--- a/lib/obstack.h
++++ b/lib/obstack.h
+@@ -118,7 +118,7 @@ extern int obstack_chunk_size;
+ extern void *obstack_base;
+ extern void *obstack_next_free;
+ extern void *obstack_alignment_mask;
++extern void (*obstack_alloc_failed_handler) (void);
+-extern __attribute_noreturn__ void (*obstack_alloc_failed_handler) (void);
+ extern void (*obstack_chunkfun) (void *, size_t);
+ extern void (*obstack_freefun) (void *, void *);
+ extern void *obstack_alloc;
