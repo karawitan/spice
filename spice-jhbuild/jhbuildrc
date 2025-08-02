@@ -9,22 +9,23 @@
 # Binaries will be in $HOME/spice-usr
 #
 
-moduleset = os.path.join(os.environ['HOME'], 'spice', 'spice-jhbuild', 'modulesets', 'spice.xml')
+use_local_modulesets = True
+skip = ["python"]
 
-autogenargs = ''
+moduleset = os.path.join(os.environ['HOME'],'spice','spice-jhbuild','modulesets','spice.xml')
 
-modules = [ 'spice-gtk', 'qemu' ]
+autogenargs = '--disable-usbredir --with-gtk=3.0 --with-audio=gstreamer --with-gtk=3.0 --disable-smartcard --disable-vala --enable-controller --with-coroutine=gthread'
 
-modules['m4'].post_checkout = [
-    'sed -i '' 's/__attribute_noreturn__ void (*obstack_alloc_failed_handler) (void)/void (*obstack_alloc_failed_handler) (void)/g' lib/obstack.c',
-    'sed -i '' 's/extern __attribute_noreturn__ void (*obstack_alloc_failed_handler) (void);/extern void (*obstack_alloc_failed_handler) (void);/g' lib/obstack.h'
+modules = [
+    'glib',
+    'gstreamer',
+    'cogl',
+    'spice-gtk',
+    'qemu'
 ]
 
-os.environ['CFLAGS'] = '-Wno-int-conversion'
-
-# custom CFLAGS / environment pieces for the build
-# os.environ['CFLAGS'] = '-Wall -g -O0'
+os.environ['CFLAGS'] = '-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign'
 
 # Additional flags for make can be specified here
-# Set makeargs to 'V=1' for verbose build output.
-makeargs = '-j8'
+# Set makeargs to'V=1' for verbose build output.
+makeargs = '-j4 CFLAGS="-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign"'
