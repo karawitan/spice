@@ -9,9 +9,6 @@
 <repository type="git" name="git.freedesktop.org"
     href="git://anongit.freedesktop.org/"/>
 
-  <repository type="git" name="git.freedesktop.org"
-      href="git://anongit.freedesktop.org/"/>
-
   <repository type="git" name="spice.git"
       href="git://anongit.freedesktop.org/git/spice"/>
 
@@ -62,7 +59,7 @@
 
   <autotools id="spice-protocol">
     <branch repo="spice"
-            module="releases/spice-protocol-0.12.6.tar.bz2"
+            module="releases/spice-protocol-0.12.6.tar.xz"
             version="0.12.6"
             hash="sha256:9d4745602eb2ab1d1c1ab98b4babf587574870993b4faefe354ac57bb5e8259b"
             size="70176" />
@@ -115,7 +112,7 @@
 
   <autotools id="spice-gtk" autogenargs="--disable-usbredir --without-python --with-audio=gstreamer --with-gtk=2.0 --disable-smartcard --disable-vala --enable-controller --with-coroutine=gthread --disable-werror">
     <branch repo="spice"
-            module="gtk/spice-gtk-0.20.tar.bz2"
+            module="gtk/spice-gtk-0.20.tar.xz"
             version="0.20"
             hash="sha256:b1355823b0ceb2e118c1f9a9a602ccab78e1e2edf2d93f71fa42d3bc85ca75df"
             size="1210694">
@@ -132,7 +129,7 @@
 
   <autotools id="spice-gtk3" autogenargs="--disable-usbredir --without-python --with-audio=gstreamer --with-gtk=3.0 --disable-smartcard --disable-vala --enable-controller --with-coroutine=gthread">
     <branch repo="spice"
-            module="gtk/spice-gtk-0.20.tar.bz2"
+            module="gtk/spice-gtk-0.20.tar.xz"
             version="0.20"
             hash="sha256:b1355823b0ceb2e118c1f9a9a602ccab78e1e2edf2d93f71fa42d3bc85ca75df"
             size="1210694">
@@ -257,12 +254,11 @@
   </autotools>
 
   <autotools id="gettext">
-  <branch repo="gnu" module="gettext-0.22.5.tar.gz" version="0.22.5" />
-  <autogenargs>--disable-java --disable-csharp --without-emacs</autogenargs>
-</autotools>
-
-  
-
+    <branch repo="ftp.gnome.org" module="gettext/0.22/gettext-0.22.5.tar.xz" version="0.22.5" />
+    <autogenargs>--disable-java --disable-csharp --without-emacs</autogenargs>
+    <dependencies>
+      <dep package="libiconv" />
+    </dependencies>
+  </autotools>
 
 </moduleset>
-/Users/kalou/spice/spice-jhbuild/gtk-osx-bootstrap.txt

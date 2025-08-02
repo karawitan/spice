@@ -10,11 +10,9 @@
 #
 
 use_local_modulesets = True
-skip = ["python"]
+skip = ["python", "intltool"]
 
 moduleset = os.path.join(os.environ['HOME'],'spice','spice-jhbuild','modulesets','spice.xml')
-
-autogenargs = '--disable-usbredir --with-gtk=3.0 --with-audio=gstreamer --with-gtk=3.0 --disable-smartcard --disable-vala --enable-controller --with-coroutine=gthread --disable-wayland-egl-platform --disable-wayland-egl-server --enable-glx --disable-xlib --disable-cogl-gst --enable-gl'
 
 modules = [
     'glib',
