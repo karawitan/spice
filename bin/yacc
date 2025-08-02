@@ -1,0 +1,2 @@
+#! /bin/sh
+exec '/Users/kalou/spice-usr/bin/bison' -y "$@"
