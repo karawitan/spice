@@ -1,6 +1,8 @@
-.tar.gz
+*.tar.gz
 .tar.xz
 .tar.bz2
 _jhbuild
 *.o
 .DS_Store
+source
+tarballs

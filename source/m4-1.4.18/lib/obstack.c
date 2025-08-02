@@ -326,7 +326,7 @@ int obstack_exit_failure = EXIT_FAILURE;
 #   include <libio/iolibio.h>
 #  endif
 
-static _Noreturn void
+static __attribute__((noreturn)) void
 print_and_abort (void)
 {
   /* Don't change any of these strings.  Yes, it would be possible to add
@@ -348,7 +348,7 @@ print_and_abort (void)
    abort gracefully or use longjump - but shouldn't return.  This
    variable by default points to the internal function
    'print_and_abort'.  */
-__attribute_noreturn__ void (*obstack_alloc_failed_handler) (void)
+__attribute__((noreturn)) void (*obstack_alloc_failed_handler) (void)
   = print_and_abort;
 # endif /* !_OBSTACK_NO_ERROR_HANDLER */
 #endif /* !_OBSTACK_ELIDE_CODE */

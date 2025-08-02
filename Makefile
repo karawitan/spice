@@ -18,11 +18,15 @@ build:
 	. venv/bin/activate ; \
 	export PYENV_VERSION=$(pyenv version-name) ; \
 	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/jhbuild-install/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
+	export CFLAGS="-Wno-int-conversion" ; \
+	export PREFIX=$(CURDIR) ; \
 	$(JHBUILD) bootstrap
 
 	. venv/bin/activate ; \
 	export PYENV_VERSION=$(pyenv version-name) ; \
 	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/jhbuild-install/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
+	export CFLAGS="-Wno-int-conversion" ; \
+	export PREFIX=$(CURDIR) ; \
 	$(JHBUILD) build
 
 venv:
@@ -41,6 +45,8 @@ deps: cogl
 
 cogl:
 	git clone https://gitlab.gnome.org/Archive/cogl.git --single-branch
+
+cogl.build:
 	cd cogl ; ./autogen.sh
 	cd cogl ; make clean ; \
 	./configure \
