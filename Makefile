@@ -1,7 +1,7 @@
 .PHONY: all m4 autoconf libtool clean
 .PHONY: help all build
 
-# for jhbuild we must use python3.12
+# for jhbuild we must use python3.11
 
 CURDIR := $(shell pwd)
 
@@ -15,7 +15,7 @@ JHBUILD_DIR = $(CURDIR)/jhbuild-src
 JHBUILD = $(JHBUILD_DIR)/jhbuild
 
 # Ensure Python 3.12 is used
-PYTHON3 = python3.12
+PYTHON3 = python3.11
 
 # Required library versions
 GLIB_VERSION = 2.84.3
@@ -25,25 +25,20 @@ COGL_VERSION = 1.26.4
 # Build flags
 CFLAGS = -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error
 
+# Environment setup
+JHBUILD_ENV = \
+	. venv/bin/activate ; \
+	export PYENV_VERSION=$(pyenv version-name) ; \
+	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(JHBUILD_DIR)/bin:$(PATH) ; \
+	export CFLAGS="$(CFLAGS)" ; \
+	export PREFIX=$(CURDIR) ; \
+	export JHBUILD_MODULES=$(CURDIR)/modules ; \
+	export PYTHONPATH=$(JHBUILD_DIR)
+
 bootstrap:
 	@echo "Bootstrapping the project..."
-	. venv/bin/activate ; \
-	export PYENV_VERSION=$(pyenv version-name) ; \
-	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
-	export CFLAGS="$(CFLAGS)" ; \
-	export PREFIX=$(CURDIR) ; \
-	export JHBUILD_MODULES=$(CURDIR)/modules ; \
-	$(PYTHON3) $(JHBUILD) bootstrap --no-interact
-
-build:
-	@echo "Building the project..."
-	. venv/bin/activate ; \
-	export PYENV_VERSION=$(pyenv version-name) ; \
-	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
-	export CFLAGS="$(CFLAGS)" ; \
-	export PREFIX=$(CURDIR) ; \
-	export JHBUILD_MODULES=$(CURDIR)/modules ; \
-	$(PYTHON3) $(JHBUILD) build CFLAGS="$(CFLAGS)"
+	$(JHBUILD_ENV) && jhbuild bootstrap 
+	$(JHBUILD_ENV) && jhbuild build CFLAGS="$(CFLAGS)"
 
 install:
 	. venv/bin/activate ; \
@@ -55,11 +50,15 @@ install:
 	$(PYTHON3) $(JHBUILD) install CFLAGS="-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error"
 
 venv:
-	$(PYTHON3) -m venv $@
-	. $@/bin/activate ; \
-	$(PYTHON3) -m pip install --upgrade pip
-	. $@/bin/activate ; \
-	$(PYTHON3) -m pip install pplx-cli pip setuptools
+	@echo "Creating virtual environment..."
+	rm -rf venv
+	python3.12 -m venv venv
+	. venv/bin/activate ; \
+		python3.12 -m pip install --upgrade pip
+	. venv/bin/activate ; \
+		python3.12 -m pip install wheel setuptools meson
+	. venv/bin/activate ; \
+		cd /Users/kalou/spice/jhbuild-src && ./autogen.sh && make && make install
 
 doc:
 
@@ -67,31 +66,42 @@ deps: cogl
 	defaults write org.macosforge.xquartz.X11 enable_iglx -bool true
 	brew install mesa mesa-glu gettext
 	brew install libx11 libxext libxfixes libxdamage libxcomposite libxrandr
-	brew install pkg-config iso-codes libgdata webkitgtk libgee gtk-doc glib
+	brew install pkg-config iso-codes libgdata libgee gtk-doc glib
+	brew install gst-plugins-base gst-plugins-good gst-plugins-bad
+	brew install gobject-introspection gettext
+	# sudo cpan XML::Parser
+	brew install libxml2 expat
+	brew install cpanm
+	# Instead of webkitgtk, try webkit2gtk or just skip web components
+	brew install gtk+3 glib cairo pango atk gdk-pixbuf
+	# For graphics/display, use macOS equivalents
+	brew install libepoxy mesa
+	cpanm XML::Parser
+	# brew install perl-xml-parser
 	cd cogl ; ./autogen.sh
 
 cogl:
 	git clone https://gitlab.gnome.org/Archive/cogl.git --single-branch
+	cd cogl && git checkout tags/1.26.4
 
-cogl.build:
-	cd cogl ; ./autogen.sh
-	cd cogl ; make clean ; \
-	./configure \
+cogl.build: cogl
+	cd cogl && ./autogen.sh
+	cd cogl && ./configure \
+	  --prefix=$(CURDIR)/cogl-install \
 	  --disable-wayland-egl-platform \
 	  --disable-wayland-egl-server \
 	  --enable-gl \
 	  --enable-cogl-gst \
 	  CPPFLAGS="-I/opt/X11/include" \
-	  LDFLAGS="-L/opt/X11/lib"
+	  LDFLAGS="-L/opt/X11/lib" \
+	  PKG_CONFIG_PATH=/opt/X11/lib/pkgconfig:/usr/local/lib/pkgconfig
+	cd cogl && make
+	cd cogl && make install
 
 
 m4:
 	@echo "Configuring m4..."
 	cd $(M4_DIR) && ./configure --prefix=$(M4_INSTALL_DIR)
-	@echo "Patching m4 obstack.c..."
-	sed -i '' 's/__attribute_noreturn__ void (*obstack_alloc_failed_handler) (void)/void (*obstack_alloc_failed_handler) (void)/g' $(M4_DIR)/lib/obstack.c
-	@echo "Patching m4 obstack.h..."
-	sed -i '' 's/extern __attribute_noreturn__ void (*obstack_alloc_failed_handler) (void);/extern void (*obstack_alloc_failed_handler) (void);/g' $(M4_DIR)/lib/obstack.h
 	@echo "Compiling m4..."
 	cd $(M4_DIR) && make
 	@echo "Installing m4..."
