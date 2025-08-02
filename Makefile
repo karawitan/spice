@@ -1,6 +1,8 @@
 .PHONY: all m4 autoconf libtool clean
 .PHONY: help all build
 
+# for jhbuild we must use python3.12
+
 CURDIR := $(shell pwd)
 
 M4_DIR = m4-1.4.20
@@ -9,38 +11,55 @@ LIBTOOL_DIR = libtool-2.4.6
 M4_INSTALL_DIR = $(CURDIR)/m4-install
 AUTOCONF_INSTALL_DIR = $(CURDIR)/autoconf-install
 LIBTOOL_INSTALL_DIR = $(CURDIR)/libtool-install
-JHBUILD=jhbuild-install/bin/jhbuild
+JHBUILD_DIR = $(CURDIR)/jhbuild-src
+JHBUILD = $(JHBUILD_DIR)/jhbuild
 
+# Ensure Python 3.12 is used
+PYTHON3 = python3.12
+
+# Required library versions
+GLIB_VERSION = 2.84.3
+GSTREAMER_VERSION = 1.26.4
+COGL_VERSION = 1.26.4
+
+# Build flags
+CFLAGS = -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error
+
+bootstrap:
+	@echo "Bootstrapping the project..."
+	. venv/bin/activate ; \
+	export PYENV_VERSION=$(pyenv version-name) ; \
+	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
+	export CFLAGS="$(CFLAGS)" ; \
+	export PREFIX=$(CURDIR) ; \
+	export JHBUILD_MODULES=$(CURDIR)/modules ; \
+	$(PYTHON3) $(JHBUILD) bootstrap --no-interact
 
 build:
 	@echo "Building the project..."
-
 	. venv/bin/activate ; \
 	export PYENV_VERSION=$(pyenv version-name) ; \
-	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/jhbuild-install/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
-	export CFLAGS="-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error" ; \
+	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
+	export CFLAGS="$(CFLAGS)" ; \
 	export PREFIX=$(CURDIR) ; \
-	$(JHBUILD) bootstrap --prefix=$(CURDIR)
-
-	. venv/bin/activate ; \
-	export PYENV_VERSION=$(pyenv version-name) ; \
-	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/jhbuild-install/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
-	export CFLAGS="-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error" ; \
-	export PREFIX=$(CURDIR) ; \
-	$(JHBUILD) build --prefix=$(CURDIR) CFLAGS="-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error"
+	export JHBUILD_MODULES=$(CURDIR)/modules ; \
+	$(PYTHON3) $(JHBUILD) build CFLAGS="$(CFLAGS)"
 
 install:
 	. venv/bin/activate ; \
 	export PYENV_VERSION=$(pyenv version-name) ; \
-	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/jhbuild-install/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
+	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
 	export CFLAGS="-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error" ; \
 	export PREFIX=$(CURDIR) ; \
-	$(JHBUILD) install --prefix=$(CURDIR) CFLAGS="-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error"
+	export JHBUILD_MODULES=$(CURDIR)/modules ; \
+	$(PYTHON3) $(JHBUILD) install CFLAGS="-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error"
 
 venv:
-	python3 -m venv $@
-	. venv/bin/activate ; pip3 install --upgrade pip
-	. venv/bin/activate ; pip3 install pplx-cli pip setuptools
+	$(PYTHON3) -m venv $@
+	. $@/bin/activate ; \
+	$(PYTHON3) -m pip install --upgrade pip
+	. $@/bin/activate ; \
+	$(PYTHON3) -m pip install pplx-cli pip setuptools
 
 doc:
 

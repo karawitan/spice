@@ -4,7 +4,7 @@ Set the environment variable before running jhbuild:
 
 bash
 export PYENV_VERSION=$(pyenv version-name)
-jhbuild-install/bin/jhbuild bootstrap
+~/spice/bin/jhbuild bootstrap
 Option 2: Initialize pyenv properly
 Make sure pyenv is properly initialized in your shell. Add this to your shell profile (.bashrc, .zshrc, etc.) if it's not already there:
 
