@@ -14,9 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: configure
-      run: ./configure
-    - name: make
-      run: make
+      run: find . -type d -maxdepth 1 | grep -vE 'venv|git|src|tarballs|source|install -exec make -C {}'
     - name: make check
       run: make check
     - name: make distcheck
