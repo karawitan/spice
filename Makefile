@@ -18,16 +18,24 @@ build:
 	. venv/bin/activate ; \
 	export PYENV_VERSION=$(pyenv version-name) ; \
 	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/jhbuild-install/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
-	export CFLAGS="-Wno-int-conversion" ; \
+	export CFLAGS="-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error" ; \
 	export PREFIX=$(CURDIR) ; \
-	$(JHBUILD) bootstrap
+	$(JHBUILD) bootstrap --prefix=$(CURDIR)
 
 	. venv/bin/activate ; \
 	export PYENV_VERSION=$(pyenv version-name) ; \
 	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/jhbuild-install/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
-	export CFLAGS="-Wno-int-conversion" ; \
+	export CFLAGS="-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error" ; \
 	export PREFIX=$(CURDIR) ; \
-	$(JHBUILD) build
+	$(JHBUILD) build --prefix=$(CURDIR) CFLAGS="-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error"
+
+install:
+	. venv/bin/activate ; \
+	export PYENV_VERSION=$(pyenv version-name) ; \
+	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/jhbuild-install/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
+	export CFLAGS="-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error" ; \
+	export PREFIX=$(CURDIR) ; \
+	$(JHBUILD) install --prefix=$(CURDIR) CFLAGS="-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error"
 
 venv:
 	python3 -m venv $@
@@ -100,4 +108,3 @@ clean:
 help: ## Show this help message
 	@grep -hP '^[\w \-]+:.*##.*$$' $(MAKEFILE_LIST) | sort | \
 	awk 'BEGIN {FS = ":.*## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
-

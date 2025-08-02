@@ -1,3 +1,4 @@
+PREFIX = /Users/kalou/spice
 # Makefile for PO directory in any package using GNU gettext.
 # Copyright (C) 1995-1997, 2000-2007, 2009-2010 by Ulrich Drepper <drepper@gnu.ai.mit.edu>
 #
