@@ -43,10 +43,10 @@ venv: python-setup
 	pyenv virtualenv 3.11.9 spice-env || true
 
 	pyenv local spice-env ;\
-		pip install --upgrade pip ;\
+		pip install --upgrade pip
 
 	pyenv local spice-env ;\
-		pip install wheel setuptools meson PyGObject dbus-python
+		pip install wheel setuptools meson PyGObject dbus-python google-genai
 
 jhbuild: venv
 	cd /Users/kalou/spice/jhbuild-src && ./autogen.sh && make && make install

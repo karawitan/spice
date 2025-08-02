@@ -47,7 +47,7 @@
     </branch>
   </autotools>
 
-  <autotools id="spice-server" autogenargs="--enable-werror --enable-smartcard --with-sasl --disable-client" >
+  <autotools id="spice-server">
     <branch repo="spice.git" module="spice"/>
     <dependencies>
       <dep package="spice-protocol"/>
@@ -110,7 +110,7 @@
         version="1.5.5" size="1412611"/>
   </distutils>
 
-  <autotools id="spice-gtk" autogenargs="--disable-usbredir --without-python --with-audio=gstreamer --with-gtk=2.0 --disable-smartcard --disable-vala --enable-controller --with-coroutine=gthread --disable-werror">
+  <autotools id="spice-gtk" >
     <branch repo="spice"
             module="gtk/spice-gtk-0.20.tar.xz"
             version="0.20"
@@ -127,7 +127,7 @@
     </dependencies>
   </autotools>
 
-  <autotools id="spice-gtk3" autogenargs="--disable-usbredir --without-python --with-audio=gstreamer --with-gtk=3.0 --disable-smartcard --disable-vala --enable-controller --with-coroutine=gthread">
+  <autotools id="spice-gtk3" >
     <branch repo="spice"
             module="gtk/spice-gtk-0.20.tar.xz"
             version="0.20"
@@ -184,7 +184,7 @@
     </dependencies>
   </autotools>
 
-  <autotools id="libvirt-glib" autogenargs="--enable-vala">
+  <autotools id="libvirt-glib" >
     <branch repo="libvirt.org" module="libvirt-glib.git"/>
     <dependencies>
       <dep package="libvirt"/>
@@ -201,7 +201,7 @@
     </dependencies>
   </autotools>
 
-  <autotools id="virt-manager" makeinstallargs="-C build install" makeargs="-C build" autogenargs=" --with-default-graphics=spice">
+  <autotools id="virt-manager" makeinstallargs="-C build install" makeargs="-C build" >
     <branch repo="git.fedorahosted.org" module="virt-manager.git"/>
     <dependencies>
       <dep package="libvirt"/>
@@ -216,7 +216,7 @@
     </dependencies>
   </distutils>
 
-  <autotools id="virt-viewer" autogenargs="--with-gtk=2.0">
+  <autotools id="virt-viewer" >
     <branch repo="virt-tools"
             module="virt-viewer/virt-viewer-0.5.7.tar.gz"
             version="0.5.7"
@@ -227,7 +227,7 @@
     </dependencies>
   </autotools>
 
-  <autotools id="virt-viewer-gtk3" autogenargs="--with-gtk=3.0">
+  <autotools id="virt-viewer-gtk3" >
     <branch repo="virt-tools"
             module="virt-viewer/virt-viewer-0.5.7.tar.gz"
             version="0.5.7"
@@ -242,11 +242,11 @@
     <branch repo="git.fedorahosted.org" module="libosinfo.git"/>
   </autotools>
 
-  <autotools id="gtk-vnc" autogenargs="--with-gtk=2.0">
+  <autotools id="gtk-vnc" >
     <branch repo="git.gnome.org" module="gtk-vnc.git"/>
   </autotools>
 
-  <autotools id="vinagre" autogenargs="--enable-spice">
+  <autotools id="vinagre" >
     <branch repo="git.gnome.org" module="vinagre.git"/>
     <dependencies>
       <dep package="spice-gtk"/>
@@ -255,7 +255,6 @@
 
   <autotools id="gettext">
     <branch repo="ftp.gnome.org" module="gettext/0.22/gettext-0.22.5.tar.xz" version="0.22.5" />
-    <autogenargs>--disable-java --disable-csharp --without-emacs</autogenargs>
     <dependencies>
       <dep package="libiconv" />
     </dependencies>
