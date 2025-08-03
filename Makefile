@@ -199,11 +199,6 @@ venv: python-setup
 jhbuild: venv
 	cd /Users/kalou/spice/jhbuild-src && ./autogen.sh && make && make install
 
-doc:
-
-# Dependencies are now handled by the deps target above
-	cpanm XML::Parser
-
 clean:
 
 doc: ## Show this help message
