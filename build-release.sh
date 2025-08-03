@@ -86,7 +86,75 @@ ninja -C "${BUILD_DIR}"
 echo "Creating package..."
 DESTDIR="${PACKAGE_DIR}" ninja -C "${BUILD_DIR}" install
 
-# Fix library paths
+# Create a clean package structure
+PACKAGE_NAME="spice-client-darwin-$(uname -m)"
+RELEASE_DIR="${PACKAGE_DIR}/${PACKAGE_NAME}"
+
+echo "Creating release package in ${RELEASE_DIR}..."
+mkdir -p "${RELEASE_DIR}/bin"
+mkdir -p "${RELEASE_DIR}/lib"
+mkdir -p "${RELEASE_DIR}/share"
+
+# Copy binaries
+cp -R "${PACKAGE_DIR}${PREFIX}/bin/"* "${RELEASE_DIR}/bin/" 2>/dev/null || true
+
+# Copy libraries
+cp -R "${PACKAGE_DIR}${PREFIX}/lib/"*.dylib* "${RELEASE_DIR}/lib/" 2>/dev/null || true
+
+# Copy share files
+cp -R "${PACKAGE_DIR}${PREFIX}/share/"* "${RELEASE_DIR}/share/" 2>/dev/null || true
+
+# Create a wrapper script
+cat > "${RELEASE_DIR}/spicy" << 'EOL'
+#!/bin/bash
+# Wrapper script for Spicy client
+BASEDIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+export DYLD_LIBRARY_PATH="${BASEDIR}/lib:${DYLD_LIBRARY_PATH}"
+"${BASEDIR}/bin/spicy" "$@"
+EOL
+chmod +x "${RELEASE_DIR}/spicy"
+
+# Create a README
+cat > "${RELEASE_DIR}/README.txt" << 'EOL'
+SPICE Client for macOS
+=====================
+
+To run the SPICE client:
+
+    ./spicy [options] [host] [port]
+
+Dependencies:
+- GTK+ 3.0
+- OpenSSL
+- Other required libraries are included in the lib/ directory
+
+For more information, visit: https://www.spice-space.org/
+EOL
+
+# Create a ZIP archive
+cd "${PACKAGE_DIR}"
+ZIP_FILE="${PACKAGE_NAME}.zip"
+echo "Creating ${ZIP_FILE}..."
+zip -r "${ZIP_FILE}" "${PACKAGE_NAME}"
+
+# Calculate SHA256 checksum
+SHA256_FILE="${PACKAGE_NAME}.sha256"
+shasum -a 256 "${ZIP_FILE}" > "${SHA256_FILE}"
+
+# Move files to the original directory
+mv "${ZIP_FILE}" "${SHA256_FILE}" "${SCRIPT_DIR}/"
+
+echo ""
+echo "Release package created successfully!"
+echo "- Binary package: ${SCRIPT_DIR}/${ZIP_FILE}"
+echo "- Checksum file: ${SCRIPT_DIR}/${SHA256_FILE}"
+echo ""
+echo "To use the SPICE client:"
+echo "  unzip ${ZIP_FILE}"
+echo "  cd ${PACKAGE_NAME}"
+echo "  ./spicy [host] [port]"
+
+exit 0
 find "${PACKAGE_DIR}${INSTALL_PREFIX}/lib" -name "*.dylib" -type f | while read lib; do
     install_name_tool -id "@rpath/$(basename "$lib")" "$lib"
     
