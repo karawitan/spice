@@ -6,6 +6,8 @@
 
 <include href="gtk-osx-bootstrap.modules" />
 
+<!-- Meson build system is installed via pip -->
+
 <repository type="git" name="git.freedesktop.org"
     href="git://anongit.freedesktop.org/"/>
 
@@ -57,15 +59,16 @@
     </dependencies>
   </autotools>
 
-  <autotools id="spice-protocol">
-    <branch repo="spice"
-            module="releases/spice-protocol-0.12.6.tar.xz"
-            version="0.12.6"
-            hash="sha256:9d4745602eb2ab1d1c1ab98b4babf587574870993b4faefe354ac57bb5e8259b"
-            size="70176" />
+  <meson id="spice-protocol">
+    <branch repo="spice.git"
+            module="spice-protocol"
+            tag="v0.14.4"
+            version="0.14.4"
+            hash="sha256:04ffba610d9d1ce5fc508f803c95d2f2b5ac8117915922c2e907bae901a71bfa"
+            size="100000" />
     <dependencies>
     </dependencies>
-  </autotools>
+  </meson>
 
   <!-- qemu isn't a real autotools user, but it provides a configure script
        which is really similar to the one in autotools build systems.
@@ -103,46 +106,38 @@
     <branch repo="qemu" module="qemu"/>
   </autotools>
 
-  <distutils id="pyparsing">
-    <branch repo="sourceforge"
-        module="pyparsing/pyparsing/pyparsing-1.5.5/pyparsing-1.5.5.tar.gz"
-        hash="sha1:68f18a8f98c9d0e613e08ab45c2b8263daa4a53b"
-        version="1.5.5" size="1412611"/>
-  </distutils>
 
-  <autotools id="spice-gtk" >
-    <branch repo="spice"
-            module="gtk/spice-gtk-0.20.tar.xz"
-            version="0.20"
-            hash="sha256:b1355823b0ceb2e118c1f9a9a602ccab78e1e2edf2d93f71fa42d3bc85ca75df"
-            size="1210694">
-      <!--patch file="http://people.freedesktop.org/~teuf/spice-gtk-osx/0001-Update-spice-glib-sym-file-for-new-symbol.patch" strip="1"/> -->
+  <meson id="spice-gtk">
+    <branch repo="spice.git"
+            module="spice-gtk"
+            checkoutdir="spice-gtk-0.42"
+            tag="v0.42">
+      <dependencies>
+        <dep package="python3"/>
+        <dep package="spice-protocol"/>
+        <dep package="celt"/>
+        <dep package="pyparsing"/>
+        <dep package="gst-plugins-good"/>
+        <dep package="gtk+"/>
+      </dependencies>
     </branch>
-    <dependencies>
-      <dep package="celt"/>
-      <dep package="pyparsing"/>
-      <dep package="spice-protocol"/>
-      <dep package="gst-plugins-good"/>
-      <dep package="gtk+"/>
-    </dependencies>
-  </autotools>
+  </meson>
 
-  <autotools id="spice-gtk3" >
-    <branch repo="spice"
-            module="gtk/spice-gtk-0.20.tar.xz"
-            version="0.20"
-            hash="sha256:b1355823b0ceb2e118c1f9a9a602ccab78e1e2edf2d93f71fa42d3bc85ca75df"
-            size="1210694">
-      <!--patch file="http://people.freedesktop.org/~teuf/spice-gtk-osx/0001-Update-spice-glib-sym-file-for-new-symbol.patch" strip="1"/> -->
+  <meson id="spice-gtk3">
+    <branch repo="spice.git"
+            module="spice-gtk"
+            checkoutdir="spice-gtk3-0.42"
+            tag="v0.42">
+      <dependencies>
+        <dep package="python3"/>
+        <dep package="spice-protocol"/>
+        <dep package="celt"/>
+        <dep package="pyparsing"/>
+        <dep package="gst-plugins-good"/>
+        <dep package="gtk+"/>
+      </dependencies>
     </branch>
-    <dependencies>
-      <dep package="celt"/>
-      <dep package="pyparsing"/>
-      <dep package="spice-protocol"/>
-      <dep package="gst-plugins-good"/>
-      <dep package="gtk+-3.0"/>
-    </dependencies>
-  </autotools>
+  </meson>
 
   <autotools id="vd-agent">
     <branch repo="spice.git" module="linux/vd_agent"/>
