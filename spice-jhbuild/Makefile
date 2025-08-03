@@ -9,7 +9,7 @@ build: venv
 
 	. venv/bin/activate ; \
 	export PYENV_VERSION=$(pyenv version-name) ; \
-	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/jhbuild-install/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
+	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
 	export CFLAGS="-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error" ; \
 	export PREFIX=$(CURDIR) ; \
 	export JHBUILD_MODULES=$(CURDIR)/modules ; \
@@ -17,7 +17,7 @@ build: venv
 
 	. venv/bin/activate ; \
 	export PYENV_VERSION=$(pyenv version-name) ; \
-	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/jhbuild-install/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
+	export PATH=$(HOME)/.local/bin:$(CURDIR)/autoconf-2.69/bin:$(CURDIR)/autoconf-install/bin:$(CURDIR)/automake-1.16.1/bin:$(CURDIR)/bin:$(CURDIR)/libtool-install/bin:$(CURDIR)/m4-install/bin:$(CURDIR)/venv/bin:$(PATH) ; \
 	export CFLAGS="-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error" ; \
 	export PREFIX=$(CURDIR) ; \
 	export JHBUILD_MODULES=$(CURDIR)/modules ; \
@@ -29,4 +29,4 @@ venv:
 	. $@/bin/activate ; \
 	python3.12 -m pip install --upgrade pip setuptools
 
-JHBUILD = $(CURDIR)/jhbuild-install/bin/jhbui
+JHBUILD = $(CURDIR)/bin/jhbui
