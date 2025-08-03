@@ -1,7 +1,7 @@
 .PHONY: all build clean deps install pyparsing python-setup
 
 # ===== Configuration =====
-PREFIX ?= $(CURDIR)
+PREFIX ?= $(HOME)/spice
 JHBUILD_DIR = $(CURDIR)/jhbuild-src
 JHBUILD = $(JHBUILD_DIR)/jhbuild
 JHBUILD_CMD = $(PWD)/bin/jhbuild

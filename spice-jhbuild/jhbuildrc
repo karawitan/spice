@@ -10,16 +10,16 @@
 #
 
 use_local_modulesets = True
-skip = ["python", "intltool"]
+# Skip packages that are already provided by the system or Homebrew
+skip = ["python", "intltool", "glib", "gstreamer", "cogl"]
+
+# Use system pkg-config paths
+os.environ['PKG_CONFIG_PATH'] = '/opt/homebrew/lib/pkgconfig:/opt/homebrew/share/pkgconfig:/usr/local/lib/pkgconfig:/usr/local/share/pkgconfig:/usr/lib/pkgconfig'
 
 moduleset = os.path.join(os.environ['HOME'],'spice','spice-jhbuild','modulesets','spice.xml')
 
 modules = [
-    'glib',
-    'gstreamer',
-    'cogl',
-    'spice-gtk',
-    'qemu'
+    'spice-gtk'
 ]
 
 os.environ['CFLAGS'] = '-Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -DX11=0'
