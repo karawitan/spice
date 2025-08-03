@@ -1,0 +1,18 @@
+@@ -450,6 +450,7 @@
+ # Checks for GLib
+ # ============================================================
+ 
++if false; then
+ PKG_CHECK_MODULES(GLIB,
+                   glib-2.0 >= glib_required_version \
+                   gobject-2.0 >= glib_required_version \
+@@ -471,6 +472,9 @@
+   AC_MSG_ERROR([GLib 2.32 or later is required to build Cogl])
+ fi
+ 
++GLIB_CFLAGS="-I/opt/homebrew/include/glib-2.0 -I/opt/homebrew/lib/glib-2.0/include -I/opt/homebrew/include"
++GLIB_LIBS="-L/opt/homebrew/lib -lglib-2.0 -lgobject-2.0 -lgio-2.0 -lgmodule-2.0 -lgthread-2.0 -lintl -liconv"
++fi
+ dnl ============================================================
+ dnl Check for GLib GIO
+ dnl ============================================================

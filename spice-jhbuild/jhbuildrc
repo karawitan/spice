@@ -1,0 +1,43 @@
+# -*- mode: python -*-
+# Optimized jhbuild configuration for Spice-GTK on macOS arm64
+
+# Basic configuration
+use_local_modulesets = True
+moduleset = 'spice-gtk.modules'
+prefix = os.path.expanduser('~/spice')
+
+# Module configuration for Spice-GTK
+module_autogenargs['spice-gtk'] = '--prefix={} --enable-gtk-doc=no --enable-introspection=yes --disable-vala --disable-python --disable-usbredir --disable-smartcard'.format(prefix)
+
+# Build settings for macOS arm64
+os.environ['CFLAGS'] = '-arch arm64 -I/opt/homebrew/include -O2 -pipe -Wno-deprecated-declarations'
+os.environ['CXXFLAGS'] = os.environ['CFLAGS']
+os.environ['LDFLAGS'] = '-L/opt/homebrew/lib -L/opt/homebrew/opt/openssl@3/lib'
+os.environ['PKG_CONFIG_PATH'] = '/opt/homebrew/lib/pkgconfig:/opt/homebrew/opt/openssl@3/lib/pkgconfig'
+
+# Required minimal dependencies
+dependencies = [
+    'pkg-config',
+    'meson',
+    'ninja',
+    'glib',
+    'gobject-introspection',
+    'gtk+3',
+    'cairo',
+    'openssl@3',
+    'spice-protocol',
+    'gstreamer',
+    'gst-plugins-base',
+    'opus',
+    'jpeg-turbo',
+    'json-glib'
+]
+
+# Modules to build
+modules = ['spice-gtk']
+
+# Skip unnecessary components
+skip = ['gtk-doc', 'vala', 'usbredir', 'smartcard']
+
+# Use system Python
+python = 'python3'

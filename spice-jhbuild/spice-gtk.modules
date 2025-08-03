@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<moduleset>
+  <tarball id="spice-protocol"
+           href="https://www.spice-space.org/download/releases/spice-protocol-0.14.3.tar.xz"
+           hash="sha256:0465d9c3a0f35c7eaa3c0d0a1cf922fe8a5176062c7b5a3d3d6a9b63a2f1f9c8">
+    <branch repo="spice-protocol" module="spice-protocol" checkoutdir="spice-protocol-0.14.3">
+      <dependencies>
+        <dep package="pkg-config"/>
+      </dependencies>
+    </branch>
+  </tarball>
+
+  <tarball id="spice-gtk"
+           href="https://www.spice-space.org/download/gtk/spice-gtk-0.42.tar.xz"
+           hash="sha256:938711b4c14c8e1db3d40242cbfb6f39c2f7ec337580fc01ca7f1d8cf31583c0">
+    <branch repo="spice-gtk" module="spice-gtk" checkoutdir="spice-gtk-0.42">
+      <dependencies>
+        <dep package="spice-protocol"/>
+        <dep package="pkg-config"/>
+        <dep package="meson"/>
+        <dep package="ninja"/>
+        <dep package="glib"/>
+        <dep package="gobject-introspection"/>
+        <dep package="gtk+3"/>
+        <dep package="cairo"/>
+        <dep package="openssl@3"/>
+        <dep package="gstreamer"/>
+        <dep package="gst-plugins-base"/>
+        <dep package="opus"/>
+        <dep package="jpeg-turbo"/>
+        <dep package="json-glib"/>
+      </dependencies>
+      
+      <!-- macOS-specific patches -->
+      <patches>
+        <patch file="macos-linker-fixes.patch" strip="1"/>
+      </patches>
+      
+      <autogenargs>
+        --prefix=%{prefix}
+        --enable-introspection=yes
+        --enable-gtk-doc=no
+        --disable-vala
+        --disable-python
+        --disable-usbredir
+        --disable-smartcard
+        --disable-celt051
+      </autogenargs>
+    </branch>
+  </tarball>
+</moduleset>

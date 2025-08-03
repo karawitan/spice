@@ -1,0 +1,62 @@
+--- src/meson.build.orig	2023-01-01 00:00:00.000000000 +0000
++++ src/meson.build	2023-01-01 00:00:01.000000000 +0000
+@@ -184,6 +184,15 @@
+                                  'usbdk_api.h']
+ endif
+ 
++# macOS specific settings
++if host_machine.system() == 'darwin'
++  # macOS specific linker flags
++  spice_glib_link_args = [
++    '-Wl,-exported_symbols_list,@0@/macos-link.ld'.format(meson.current_source_dir()),
++    '-Wl,-undefined,error',
++  ]
++  spice_glib_deps += dependency('appleframeworks', modules: ['Cocoa', 'IOKit', 'CoreVideo'])
++endif
+ 
+ #
+ # Generate spice-glib-sym-file if version scripts are not supported
+--- meson.build.orig	2023-01-01 00:00:00.000000000 +0000
++++ meson.build	2023-01-01 00:00:01.000000000 +0000
+@@ -36,6 +36,15 @@
+ spice_wayland_deps = []
+ spice_acl_deps = []
+ 
++# macOS specific settings
++if host_machine.system() == 'darwin'
++  # macOS specific linker flags
++  spice_glib_link_args = [
++    '-Wl,-exported_symbols_list,@0@/macos-link.ld'.format(meson.current_source_dir()),
++    '-Wl,-undefined,error',
++  ]
++  spice_glib_deps += dependency('appleframeworks', modules: ['Cocoa', 'IOKit', 'CoreVideo'])
++endif
+ 
+ #
+ # Check for system headers
+--- src/gtk-session-helper.c.orig	2023-01-01 00:00:00.000000000 +0000
++++ src/gtk-session-helper.c	2023-01-01 00:00:01.000000000 +0000
+@@ -21,6 +21,10 @@
+ #include <config.h>
+ #endif
+ 
++#ifdef __APPLE__
++#include <CoreFoundation/CoreFoundation.h>
++#endif
++
+ #include <glib.h>
+ #include <glib/gi18n.h>
+ #include <glib/gstdio.h>
+--- src/usb-device-manager.c.orig	2023-01-01 00:00:00.000000000 +0000
++++ src/usb-device-manager.c	2023-01-01 00:00:01.000000000 +0000
+@@ -22,6 +22,10 @@
+ #include <config.h>
+ #endif
+ 
++#ifdef __APPLE__
++#include <CoreFoundation/CoreFoundation.h>
++#endif
++
+ #include <glib/gi18n.h>
+ #include <glib/gstdio.h>
+ #include <glib-unix.h>
