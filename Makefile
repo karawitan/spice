@@ -1,40 +1,86 @@
-.PHONY: all build clean deps install pyparsing python-setup
+.PHONY: all build clean deps install pyparsing python-setup macports-setup macports-build
 
 # ===== Configuration =====
-PREFIX ?= $(HOME)/spice
-JHBUILD_DIR = $(CURDIR)/jhbuild-src
-JHBUILD = $(JHBUILD_DIR)/jhbuild
-JHBUILD_CMD = $(PWD)/bin/jhbuild
-JHBUILD_RC = $(PWD)/spice-jhbuild/jhbuildrc
+PREFIX ?= $(HOME)/spice/install
+BUILD_SYSTEM ?= homebrew  # Options: homebrew, macports
+
+# Path configurations
+HOMEBREW_PREFIX ?= /opt/homebrew
+MACPORTS_PREFIX ?= /opt/local
 
 # Build flags
 CFLAGS += -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error -Wno-unknown-warning-option
 
 # ===== Environment Setup =====
-HOMEBREW_PREFIX ?= /opt/homebrew
-JHBUILD_ENV = \
-	export ACLOCAL_PATH=$(PREFIX)/share/aclocal:$(HOMEBREW_PREFIX)/share/aclocal: ; \
-	export PYENV_VERSION= ; \
-	export PATH=$(HOMEBREW_PREFIX)/bin:$(HOMEBREW_PREFIX)/sbin:$(LOCAL_BIN):$(PREFIX)/bin:$(JHBUILD_SRC)/bin:$(PYENV_ROOT)/shims:$(PYENV_ROOT)/bin:$(PATH) ; \
-	export CFLAGS="$(CFLAGS) -I$(HOMEBREW_PREFIX)/include" ; \
-	export LDFLAGS="-L$(HOMEBREW_PREFIX)/lib" ; \
-	export PKG_CONFIG_PATH="$(HOMEBREW_PREFIX)/lib/pkgconfig:$(HOMEBREW_PREFIX)/opt/openssl@1.1/lib/pkgconfig:$(PKG_CONFIG_PATH)" ; \
-	export PREFIX=$(PREFIX) ; \
-	export PYTHONPATH=$(JHBUILD_SRC) ; \
-	export PERL5LIB=$(PERL5LIB):
+ifeq ($(BUILD_SYSTEM),macports)
+    # MacPorts environment
+    PKG_CONFIG_PATH := $(MACPORTS_PREFIX)/lib/pkgconfig:$(MACPORTS_PREFIX)/share/pkgconfig:$(PKG_CONFIG_PATH)
+    PATH := $(MACPORTS_PREFIX)/bin:$(MACPORTS_PREFIX)/sbin:$(PATH)
+    LDFLAGS := -L$(MACPORTS_PREFIX)/lib $(LDFLAGS)
+    CPPFLAGS := -I$(MACPORTS_PREFIX)/include $(CPPFLAGS)
+    PYTHONPATH := $(shell python3 -c 'import site; print(":".join(site.getsitepackages()))'):$(PYTHONPATH)
+    export PKG_CONFIG_PATH PATH LDFLAGS CPPFLAGS PYTHONPATH
+else
+    # Homebrew environment (default)
+    JHBUILD_DIR = $(CURDIR)/jhbuild-src
+    JHBUILD = $(JHBUILD_DIR)/jhbuild
+    JHBUILD_CMD = $(PWD)/bin/jhbuild
+    JHBUILD_RC = $(PWD)/spice-jhbuild/jhbuildrc
+    
+    JHBUILD_ENV = \
+    	export ACLOCAL_PATH=$(PREFIX)/share/aclocal:$(HOMEBREW_PREFIX)/share/aclocal: ; \
+    	export PYENV_VERSION= ; \
+    	export PATH=$(HOMEBREW_PREFIX)/bin:$(HOMEBREW_PREFIX)/sbin:$(LOCAL_BIN):$(PREFIX)/bin:$(JHBUILD_SRC)/bin:$(PYENV_ROOT)/shims:$(PYENV_ROOT)/bin:$(PATH) ; \
+    	export CFLAGS="$(CFLAGS) -I$(HOMEBREW_PREFIX)/include" ; \
+    	export LDFLAGS="-L$(HOMEBREW_PREFIX)/lib" ; \
+    	export PKG_CONFIG_PATH="$(HOMEBREW_PREFIX)/lib/pkgconfig:$(HOMEBREW_PREFIX)/opt/openssl@1.1/lib/pkgconfig:$(PKG_CONFIG_PATH)" ; \
+    	export PREFIX=$(PREFIX) ; \
+    	export PYTHONPATH=$(JHBUILD_SRC) ; \
+    	export PERL5LIB=$(PERL5LIB):
+endif
 
 # ===== Main Targets =====
 all: deps build
 
 # Build the project
-build: pyparsing checkout-sources apply-patches
-	@echo "Building spice-gtk..."
+build: $(if $(filter macports,$(BUILD_SYSTEM)),macports-build,homebrew-build)
+
+# Build with Homebrew
+homebrew-build: pyparsing checkout-sources apply-patches
+	@echo "Building spice-gtk with Homebrew..."
 	$(JHBUILD_ENV) && $(JHBUILD_CMD) -f $(JHBUILD_RC) build -a spice-gtk
+
+# Build with MacPorts
+macports-build: macports-setup
+	@echo "Building spice-gtk with MacPorts..."
+	mkdir -p build/macports
+	cd build/macports && \
+	meson setup ../../spice-gtk \
+	  --prefix=$(PREFIX) \
+	  --buildtype=release \
+	  -Dgtk_doc=disabled \
+	  -Dvapi=disabled \
+	  -Dpolkit=disabled \
+	  -Dusbredir=disabled \
+	  -Dsmartcard=disabled \
+	  -Dlz4=disabled \
+	  -Dintrospection=disabled \
+	  -Dspice-common:manual-link=false \
+	  -Dspice-common:generate-code=client \
+	  -Dspice-common:python=python3.13 \
+	  -Dc_args=-Wno-error=deprecated-declarations \
+	  -Dcoroutine=ucontext \
+	  -Dgtk=disabled
+	ninja -C build/macports
 
 # Install the project
 install: build
 	@echo "Installing the project..."
-	$(JHBUILD_ENV) && $(JHBUILD_CMD) -f $(JHBUILD_RC) run sh -c 'meson install -C ~/jhbuild/checkout/spice-gtk-0.42/builddir --no-rebuild'
+	@if [ "$(BUILD_SYSTEM)" = "macports" ]; then \
+		ninja -C build/macports install; \
+	else \
+		$(JHBUILD_ENV) && $(JHBUILD_CMD) -f $(JHBUILD_RC) run sh -c 'meson install -C ~/jhbuild/checkout/spice-gtk-0.42/builddir --no-rebuild'; \
+	fi
 
 # Bootstrap the build environment
 bootstrap: deps
@@ -81,9 +127,11 @@ pyparsing:
 	pip install meson==1.8.3 six pyparsing
 
 # Install system dependencies
-deps: python-setup
-	@echo "=== Installing System Dependencies ==="
-	@echo "Installing required packages via Homebrew..."
+deps: $(if $(filter macports,$(BUILD_SYSTEM)),macports-deps,homebrew-deps)
+
+# Install dependencies with Homebrew
+homebrew-deps: python-setup
+	@echo "=== Installing System Dependencies with Homebrew ==="
 	@if ! command -v brew >/dev/null; then \
 		echo "Error: Homebrew is required but not installed. Please install it from https://brew.sh"; \
 		exit 1; \
@@ -98,6 +146,57 @@ deps: python-setup
 		gtk+3 \
 		cairo \
 		pango \
+
+# Install dependencies with MacPorts
+macports-deps: macports-setup
+	@echo "=== Installing System Dependencies with MacPorts ==="
+	sudo port install \
+		meson ninja \
+		pkgconfig \
+		intltool \
+		gettext \
+		gtk-doc \
+		vala \
+		gobject-introspection \
+		python313 \
+		cairo \
+		gdk-pixbuf2 \
+		glib2 \
+		gtk3 \
+		jpeg-turbo \
+		json-glib \
+		libepoxy \
+		libsoup3 \
+		libusb \
+		lz4 \
+		openssl3 \
+		opus \
+		pango \
+		phodav \
+		pixman \
+		spice-protocol \
+		usbredir \
+		libvpx \
+		orc \
+		libnice \
+		gstreamer1-gst-plugins-base \
+		gstreamer1-gst-plugins-good \
+		gstreamer1-gst-plugins-bad \
+		gstreamer1-gst-libav
+
+# Setup MacPorts environment
+macports-setup:
+	@if [ "$(BUILD_SYSTEM)" = "macports" ] && [ ! -f "/opt/local/bin/port" ]; then \
+		echo "MacPorts not found. Please install it first."; \
+		exit 1; \
+	fi
+	@if [ "$(BUILD_SYSTEM)" = "macports" ]; then \
+		echo "Setting up Python virtual environment..."; \
+		python3.13 -m venv venv; \
+		. venv/bin/activate; \
+		pip install --upgrade pip; \
+		pip install six pyparsing; \
+	fi
 		atk \
 		gdk-pixbuf \
 		libepoxy \
