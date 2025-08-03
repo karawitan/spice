@@ -8,14 +8,17 @@ JHBUILD_CMD = $(PWD)/bin/jhbuild
 JHBUILD_RC = $(PWD)/spice-jhbuild/jhbuildrc
 
 # Build flags
-CFLAGS += -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error
+CFLAGS += -Wno-int-conversion -Wno-incompatible-function-pointer-types -Wno-pointer-sign -Wno-error -Wno-unknown-warning-option
 
 # ===== Environment Setup =====
+HOMEBREW_PREFIX ?= /opt/homebrew
 JHBUILD_ENV = \
 	export ACLOCAL_PATH=$(PREFIX)/share/aclocal:$(HOMEBREW_PREFIX)/share/aclocal: ; \
 	export PYENV_VERSION= ; \
 	export PATH=$(HOMEBREW_PREFIX)/bin:$(HOMEBREW_PREFIX)/sbin:$(LOCAL_BIN):$(PREFIX)/bin:$(JHBUILD_SRC)/bin:$(PYENV_ROOT)/shims:$(PYENV_ROOT)/bin:$(PATH) ; \
-	export CFLAGS="$(CFLAGS)" ; \
+	export CFLAGS="$(CFLAGS) -I$(HOMEBREW_PREFIX)/include" ; \
+	export LDFLAGS="-L$(HOMEBREW_PREFIX)/lib" ; \
+	export PKG_CONFIG_PATH="$(HOMEBREW_PREFIX)/lib/pkgconfig:$(HOMEBREW_PREFIX)/opt/openssl@1.1/lib/pkgconfig:$(PKG_CONFIG_PATH)" ; \
 	export PREFIX=$(PREFIX) ; \
 	export PYTHONPATH=$(JHBUILD_SRC) ; \
 	export PERL5LIB=$(PERL5LIB):
@@ -31,7 +34,7 @@ build: pyparsing checkout-sources apply-patches
 # Install the project
 install: build
 	@echo "Installing the project..."
-	$(JHBUILD_ENV) && $(JHBUILD_CMD) -f $(JHBUILD_RC) install spice-gtk
+	$(JHBUILD_ENV) && $(JHBUILD_CMD) -f $(JHBUILD_RC) run sh -c 'meson install -C ~/jhbuild/checkout/spice-gtk-0.42/builddir --no-rebuild'
 
 # Bootstrap the build environment
 bootstrap: deps
@@ -55,28 +58,14 @@ checkout-sources:
 
 # Apply necessary patches for macOS
 apply-patches: checkout-sources
-	@echo "\n=== Applying macOS-specific patches ==="
-	@cd ~/jhbuild/checkout/spice-gtk-0.42 || (echo "Error: Could not enter source directory" && exit 1)
-	@if [ ! -f meson.build ]; then \
-	  echo "Error: meson.build not found"; \
-	  exit 1; \
+	@echo "=== Applying macOS-specific changes ==="
+	@if [ -f ~/jhbuild/checkout/spice-gtk-0.42/src/meson.build ]; then \
+		echo "Patching meson.build for macOS..."; \
+		./patch-meson-build.sh; \
+		echo "Patched meson.build applied successfully"; \
+	else \
+		echo "Error: src/meson.build not found in ~/jhbuild/checkout/spice-gtk-0.42/"; exit 1; \
 	fi
-	@echo "- Creating backup of meson.build..."
-	@cp -v meson.build meson.build.orig
-	@echo "- Applying macOS-specific changes..."
-	@# Fix the darwin system check and version script handling
-	@sed -i '' -e '/if host_machine.system() == darwin/ {\
-	  s/darwin/"darwin"/\
-	}' meson.build
-	@# Ensure proper if/else/endif structure
-	@sed -i '' -e '/if not spice_gtk_has_version_script/,/endif/ {\
-	  /^[[:space:]]*if host_machine/s/^/  /\
-	  /^[[:space:]]*spice_gtk_version_script/s/^/  /\
-	  /^[[:space:]]*else/s/^/  /\
-	  /^[[:space:]]*spice_gtk_version_script/s/^/  /\
-	  /^[[:space:]]*endif/s/^/  /\
-	}' meson.build
-	@echo "✓ Successfully modified meson.build for macOS"
 
 # ===== Dependencies =====
 
@@ -88,22 +77,41 @@ pyparsing:
 	if [ -f requirements.txt ]; then \
 	  pip install -r requirements.txt; \
 	fi && \
-	echo "- Installing meson build system..." && \
-	pip install meson==1.8.3
+	echo "- Installing build dependencies..." && \
+	pip install meson==1.8.3 six pyparsing
 
 # Install system dependencies
-deps:
+deps: python-setup
 	@echo "=== Installing System Dependencies ==="
-	@echo "Please ensure the following packages are installed:"
-	@echo "- Python 3.11.9 (via pyenv)"
-	@echo "- git"
-	@echo "- pkg-config"
-	@echo "- meson (installed via pip)"
-	@echo "- ninja"
-	@echo "- glib"
-	@echo "- gtk+3"
-	@echo "- spice-protocol"
-	@echo "\nRun 'make python-setup' to set up the Python environment"
+	@echo "Installing required packages via Homebrew..."
+	@if ! command -v brew >/dev/null; then \
+		echo "Error: Homebrew is required but not installed. Please install it from https://brew.sh"; \
+		exit 1; \
+	fi
+	brew update
+	brew install \
+		pkg-config \
+		ninja \
+		meson \
+		glib \
+		gobject-introspection \
+		gtk+3 \
+		cairo \
+		pango \
+		atk \
+		gdk-pixbuf \
+		libepoxy \
+		gettext \
+		libffi \
+		openssl@1.1 \
+		spice-protocol \
+		gstreamer \
+		gst-plugins-base \
+		gst-plugins-good \
+		gst-plugins-bad \
+		gst-libav
+
+	@echo "\n✓ Dependencies installed. Run 'make build' to start the build"
 
 # Set up Python environment
 python-setup:
@@ -193,12 +201,7 @@ jhbuild: venv
 
 doc:
 
-deps:
-	defaults write org.macosforge.xquartz.X11 enable_iglx -bool true
-	brew install mesa mesa-glu gettext gobject-introspection libx11 libxext libxfixes libxdamage libxcomposite libxrandr pkg-config iso-codes libgdata libgee gtk-doc glib gst-plugins-base gst-plugins-good gst-plugins-bad libxml2 expat cpanm gtk+3 cairo pango atk gdk-pixbuf libepoxy
-	brew install meson ninja pkg-config glib cairo pixman
-
-	cpanm --local-lib=~/perl5 local::lib
+# Dependencies are now handled by the deps target above
 	cpanm XML::Parser
 
 clean:
