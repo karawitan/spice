@@ -1,0 +1,44 @@
+diff --git a/src/meson.build b/src/meson.build
+index 1a2b3c4..d4e5f67 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -391,7 +391,7 @@ if spice_gtk_has_gtk
+   )
+ 
+   # Version script for ABI compatibility
+-  version_script = files('map-file')
++  version_script = host_machine.system() == 'darwin' ? [] : files('map-file')
+   spice_gtk_ldflags = []
+   if cc.links('int main() { return 0; }',
+               args: '-Wl,--version-script=' + meson.current_source_dir() / 'map-file',
+@@ -409,6 +409,10 @@ if spice_gtk_has_gtk
+     spice_gtk_ldflags = ['-exported_symbols_list', mapfile]
+   endif
+ 
++  if host_machine.system() == 'darwin'
++    spice_gtk_ldflags = []
++  endif
++
+   spice_gtk_lib = library('spice-client-gtk-3.0',
+     spice_gtk_sources,
+     spice_gtk_resources,
+@@ -521,7 +525,7 @@ if spice_gtk_has_gtk
+   )
+ 
+   # Version script for ABI compatibility
+-  version_script = files('controller/map-file')
++  version_script = host_machine.system() == 'darwin' ? [] : files('controller/map-file')
+   spice_controller_ldflags = []
+   if cc.links('int main() { return 0; }',
+               args: '-Wl,--version-script=' + meson.current_source_dir() / 'controller/map-file',
+@@ -539,6 +543,10 @@ if spice_gtk_has_gtk
+     spice_controller_ldflags = ['-exported_symbols_list', mapfile]
+   endif
+ 
++  if host_machine.system() == 'darwin'
++    spice_controller_ldflags = []
++  endif
++
+   spice_controller_lib = library('spice-controller',
+     spice_controller_sources,
+     spice_controller_resources,
