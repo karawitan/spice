@@ -1,0 +1,5 @@
+[virt-viewer]
+type=spice
+host=localhost
+port=5900
+fullscreen=0

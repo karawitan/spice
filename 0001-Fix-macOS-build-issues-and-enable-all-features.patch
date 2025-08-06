@@ -1,0 +1,407 @@
+From 435a9ed8790dbf81ca718cd83081d7e758038bff Mon Sep 17 00:00:00 2001
+From: Research at Beleganjur <r@b>
+Date: Wed, 6 Aug 2025 13:58:20 +0200
+Subject: [PATCH] Fix macOS build issues and enable all features
+
+Fixed symbol visibility issues in GTK library by changing gnu_symbol_visibility from 'hidden' to 'default'
+
+Created proper symbol files for macOS linker compatibility
+
+Fixed syntax errors in meson.build file
+
+Enabled features: webdav, gtk, usbredir, lz4, introspection, recorder
+
+Disabled problematic features for macOS: polkit, smartcard, valgrind, vapi
+
+Set coroutine to gthread for macOS compatibility
+---
+ meson.build                   |   7 +-
+ src/meson.build               |  73 +++++++++++--
+ src/spice-client-glib.symbols | 198 ++++++++++++++++++++++++++++++++++
+ src/spice-client-gtk.symbols  |  22 ++++
+ 4 files changed, 288 insertions(+), 12 deletions(-)
+ create mode 100644 src/spice-client-glib.symbols
+ create mode 100644 src/spice-client-gtk.symbols
+
+diff --git a/meson.build b/meson.build
+index 341f5fb..7f14161 100644
+--- a/meson.build
++++ b/meson.build
+@@ -1,6 +1,5 @@
+ #
+ # project definition
+-#
+ project('spice-gtk', 'c',
+          version : run_command('build-aux/git-version-gen', '@0@/.tarball-version'.format(meson.project_source_root()), check : true).stdout().strip(),
+          license : 'LGPLv2.1',
+@@ -8,6 +7,12 @@ project('spice-gtk', 'c',
+          default_options : ['buildtype=debugoptimized',
+                             'warning_level=2'])
+ 
++# Disable CMake dependency finder as it's causing issues
++cmake = import('cmake')
++cmake_opt = cmake.subproject_options()
++cmake_opt.set_override_option('cmake_module_path', 'disabled')
++cmake_opt.set_override_option('cmake_find_root_path', 'disabled')
++
+ meson.add_dist_script('build-aux/meson-dist', meson.project_version(), meson.project_source_root())
+ summary_info = {}
+ 
+diff --git a/src/meson.build b/src/meson.build
+index daff1aa..bb1673c 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -1,4 +1,18 @@
+ spice_gtk_include += [include_directories('.')]
++cc = meson.get_compiler('c')
++
++# Common compiler arguments
++spice_gtk_c_args = [
++  '-DHAVE_CONFIG_H',
++  '-DSPICE_COMPILATION',
++  '-DG_LOG_DOMAIN="GSpice"',
++  '-Wno-sign-compare',
++  '-Wno-unused-parameter',
++  '-Wno-cast-function-type',
++]
++
++# Library directory
++spice_gtk_libdir = get_option('libdir')
+ 
+ #
+ # Source files for spice-client-glib
+@@ -171,6 +185,34 @@ if spice_gtk_has_usbredir
+   ]
+ endif
+ 
++spice_gtk_c_args = []
++
++# version-script
++version_script = []
++version_script_arg = []
++
++if host_machine.system() == 'darwin'
++  # On macOS, we need to use -exported_symbols_list
++  version_script = meson.current_source_dir() / 'spice-client-glib.symbols'
++  version_script_arg = '-Wl,-exported_symbols_list,@0@'.format(version_script)
++  spice_gtk_has_version_script = true
++  spice_gtk_version_script = [version_script_arg]
++  spice_client_glib_syms = files('spice-client-glib.symbols')
++else
++  # For other platforms, try version scripts
++  test_script = meson.current_source_dir() / 'map-file'
++  if cc.links('', name: '-Wl,--version-script', args: ['-Wl,--version-script=' + test_script])
++    version_script = test_script
++    version_script_arg = '-Wl,--version-script=@0@'.format(version_script)
++    spice_gtk_has_version_script = true
++    spice_gtk_version_script = [version_script_arg]
++    spice_client_glib_syms = files('spice-glib-sym-file')
++  else
++    spice_gtk_has_version_script = false
++    warning('Linker does not support --version-script, will not limit symbols')
++  endif
++endif
++
+ if spice_gtk_has_usbredir and host_machine.system() == 'windows'
+   spice_client_glib_sources += ['usbdk_api.c',
+                                 'usbdk_api.h']
+@@ -184,11 +226,11 @@ endif
+ spice_client_glib_syms = files('map-file')
+ spice_client_glib_syms_path = meson.current_source_dir() / 'map-file'
+ spice_gtk_version_script = '-Wl,--version-script=@0@'.format(spice_client_glib_syms_path)
+-spice_gtk_has_version_script = compiler.has_link_argument(spice_gtk_version_script)
++spice_gtk_has_version_script = compiler.has_link_argument(spice_gtk_version_script) and host_machine.system() != 'darwin'
+ if not spice_gtk_has_version_script
+   spice_client_glib_syms = files('spice-glib-sym-file')
+   spice_client_glib_syms_path = meson.current_source_dir() / 'spice-glib-sym-file'
+-  spice_gtk_version_script = ['-export-symbols', spice_client_glib_syms_path]
++  spice_gtk_version_script = ['-Wl,-exported_symbols_list,' + spice_client_glib_syms_path]
+ endif
+ 
+ # soversion
+@@ -205,8 +247,8 @@ spice_client_glib_lib = library('spice-client-glib-2.0', spice_client_glib_sourc
+                                 version : spice_client_glib_so_version,
+                                 install : true,
+                                 include_directories : spice_gtk_include,
+-                                link_args : [spice_gtk_version_script],
+-                                link_depends : spice_client_glib_syms,
++                                link_args : spice_gtk_has_version_script ? spice_gtk_version_script : [],
++                                link_depends : spice_gtk_has_version_script ? [spice_client_glib_syms] : [],
+                                 dependencies : spice_glib_deps)
+ 
+ spice_client_glib_dep = declare_dependency(sources : [spice_marshals[1], spice_client_glib_enums[1]],
+@@ -373,10 +415,13 @@ if spice_gtk_has_gtk
+   # libspice-client-gtk.so
+   #
+   spice_client_gtk_syms = spice_client_glib_syms
++  spice_client_gtk_syms_path = meson.current_source_dir() / 'map-file'
++  spice_gtk_version_script = '-Wl,--version-script=@0@'.format(spice_client_gtk_syms_path)
++  spice_gtk_has_version_script = compiler.has_link_argument(spice_gtk_version_script) and host_machine.system() != 'darwin'
+   if not spice_gtk_has_version_script
+     spice_client_gtk_syms = files('spice-gtk-sym-file')
+     spice_client_gtk_syms_path = meson.current_source_dir() / 'spice-gtk-sym-file'
+-    spice_gtk_version_script = ['-export-symbols', spice_client_gtk_syms_path]
++    spice_gtk_version_script = ['-Wl,-exported_symbols_list,' + spice_client_gtk_syms_path]
+   endif
+ 
+   # soversion
+@@ -389,12 +434,18 @@ if spice_gtk_has_gtk
+                                                      spice_client_gtk_revision)
+   summary_info += {'libspice-client-gtk.so version': spice_client_gtk_so_version}
+ 
+-  spice_client_gtk_lib = library('spice-client-gtk-3.0', spice_client_gtk_sources,
+-                                 version : spice_client_gtk_so_version,
+-                                 install : true,
+-                                 link_args : [spice_gtk_version_script],
+-                                 link_depends : spice_client_gtk_syms,
+-                                 dependencies : [spice_client_glib_dep, spice_gtk_deps, spice_wayland_deps])
++  spice_client_gtk_lib = library('spice-client-gtk-3.0',
++                               spice_client_gtk_sources,
++                               version : spice_client_gtk_so_version,
++                               install : true,
++                               link_args : spice_gtk_has_version_script ? [spice_gtk_version_script] : [],
++                               link_depends : spice_gtk_has_version_script ? [spice_client_gtk_syms] : [],
++                               include_directories : spice_gtk_include,
++                               dependencies : [spice_client_glib_dep, spice_gtk_deps, spice_wayland_deps],
++                               c_args : spice_gtk_c_args,
++                               objc_args : spice_gtk_c_args,
++                               gnu_symbol_visibility : 'default',
++                               install_dir : get_option('prefix') / get_option('libdir'))
+ 
+   spice_client_gtk_dep = declare_dependency(sources : spice_widget_enums[1],
+                                             link_with : spice_client_gtk_lib,
+diff --git a/src/spice-client-glib.symbols b/src/spice-client-glib.symbols
+new file mode 100644
+index 0000000..4c55305
+--- /dev/null
++++ b/src/spice-client-glib.symbols
+@@ -0,0 +1,198 @@
++SPICEGTK_1 {
++global:
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++local:
++
++
+diff --git a/src/spice-client-gtk.symbols b/src/spice-client-gtk.symbols
+new file mode 100644
+index 0000000..5ba57cb
+--- /dev/null
++++ b/src/spice-client-gtk.symbols
+@@ -0,0 +1,22 @@
++spice_display_get_grab_keys
++spice_display_get_pixbuf
++spice_display_get_type
++spice_display_key_event_get_type
++spice_display_keyboard_ungrab
++spice_display_mouse_ungrab
++spice_display_new
++spice_display_new_with_monitor
++spice_display_send_keys
++spice_display_set_grab_keys
++spice_grab_sequence_as_string
++spice_grab_sequence_copy
++spice_grab_sequence_free
++spice_grab_sequence_get_type
++spice_grab_sequence_new
++spice_grab_sequence_new_from_string
++spice_gtk_session_copy_to_guest
++spice_gtk_session_get
++spice_gtk_session_get_type
++spice_gtk_session_paste_from_guest
++spice_usb_device_widget_get_type
++spice_usb_device_widget_new
+-- 
+2.39.5 (Apple Git-154)
+

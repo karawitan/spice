@@ -1,6 +1,49 @@
-# Spice-GTK for macOS arm64
+# SPICE-GTK macOS Build
 
-This repository contains the build scripts and patches for building Spice-GTK 0.42 on macOS arm64.
+This directory contains the files and patches needed to build SPICE-GTK on macOS with all features enabled.
+
+## Files
+
+- `build-spice-gtk.sh` - Build script for SPICE-GTK on macOS
+- `0001-Fix-macOS-build-issues-and-enable-all-features.patch` - Patch file with all the fixes for macOS
+- `spice-gtk-macos-build-summary.md` - Summary of the build process and results
+- `test-spice-simple.sh` - Simple test script to verify SPICE client functionality
+- `demonstrate-recorder.sh` - Script to demonstrate the recorder feature
+- `spice-test.vv` - SPICE connection configuration file for testing
+
+## Build Process
+
+1. Run `./build-spice-gtk.sh` to build SPICE-GTK with all features enabled
+2. The build will be installed in `/Users/kalou/spice/install`
+3. Run `./test-spice-simple.sh` to verify the build
+4. Run `./demonstrate-recorder.sh` to specifically test the recorder feature
+
+## Features Enabled
+
+- WebDAV support
+- GTK interface
+- USB redirection
+- LZ4 compression
+- GObject introspection
+- Recorder instrumentation
+
+## macOS-Specific Fixes
+
+The patch file contains fixes for:
+- GTK library symbol visibility issues
+- Linker flag compatibility
+- Meson build script syntax errors
+- Coroutine implementation selection
+- Version script handling
+
+## QEMU Integration
+
+For QEMU integration with SPICE support on macOS:
+1. Uninstall existing QEMU: `brew uninstall qemu`
+2. Install dependencies: `brew install spice-protocol spice-server`
+3. Try to build QEMU from source with SPICE support enabled
+
+Note: There may be Xcode version compatibility issues that need to be resolved for QEMU building.
 
 ## Prerequisites
 
